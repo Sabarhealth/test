@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>הזנת טקסט</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f5f5f5;
+    }
+    .card {
+      max-width: 480px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+    h1 { font-size: 18px; margin: 0 0 12px; }
+    .target {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 12px;
+      direction: ltr;
+      text-align: left;
+    }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      box-sizing: border-box;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+    button {
+      padding: 8px 18px;
+      font-size: 14px;
+      border: 1px solid #888;
+      background: #fafafa;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button.primary {
+      background: #0078d4;
+      color: #fff;
+      border-color: #0078d4;
+    }
+    .error {
+      color: #b00020;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>הזנת טקסט עבור הפקד</h1>
+    <div class="target">target id: <span id="targetLabel">(none)</span></div>
+    <form id="frm">
+      <textarea id="txt" autofocus placeholder="הקלד טקסט כאן..."></textarea>
+      <div class="actions">
+        <button type="button" id="btnCancel">ביטול</button>
+        <button type="submit" class="primary">SUBMIT</button>
+      </div>
+      <div class="error" id="err"></div>
+    </form>
+  </div>
+
+<script>
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const targetId = params.get('id') || params.get('targetId') || '';
+  document.getElementById('targetLabel').textContent = targetId || '(none)';
+
+  const errEl = document.getElementById('err');
+  const txtEl = document.getElementById('txt');
+
+  document.getElementById('btnCancel').addEventListener('click', function () {
+    window.close();
+  });
+
+  document.getElementById('frm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    errEl.textContent = '';
+
+    if (!targetId) {
+      errEl.textContent = 'לא הועבר פרמטר id בכתובת ה-URL.';
+      return;
+    }
+    if (!window.opener || window.opener.closed) {
+      errEl.textContent = 'הדף הקודם אינו זמין (window.opener ריק).';
+      return;
+    }
+
+    try {
+      window.opener.postMessage({
+        type: 'popup:setControlValue',
+        targetId: targetId,
+        value: txtEl.value
+      }, '*');
+      window.close();
+    } catch (ex) {
+      errEl.textContent = 'שגיאה בשליחת ההודעה לדף הקודם: ' + ex.message;
+    }
+  });
+})();
+</script>
+</body>
+</html>
